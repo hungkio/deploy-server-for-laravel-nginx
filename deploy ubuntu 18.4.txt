@@ -1,0 +1,162 @@
+1 cài ssh
+ 	sudo -i để sang root
+	sudo usermod -aG sudo hung
+	sudo apt install openssh-server để cài ssh nếu chưa có (check bằng sudo ufw app list)
+	sudo ufw allow OpenSSH
+	sudo ufw enable để bật tường lửa
+2 cài nginx
+	sudo apt install nginx
+	sudo ufw allow 'Nginx HTTP'
+	sudo ufw status -> gồm có ssh và nginx
+
+	// xem địa chỉ ip
+	ip addr để xem địa chỉ ip: xem chô inet
+
+3 cài mysql
+	sudo apt install mysql-server
+	sudo mysql_secure_installation để cài lại config và mật khẩu
+	sudo mysql sang chế độ mysql để cài đặt thêm
+	SELECT user,authentication_string,plugin,host FROM mysql.user; xem các tài khoản của mysql
+	ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password'; chuyển phương thức xác thực đăng nhập bằng socket sang mật khẩu
+	FLUSH PRIVILEGES; cập nhật lại mysql sau config
+
+
+	// nếu bị sai pass khi đăng nhập mysql => đặt lại pass
+	sudo service mysql stop
+	sudo mkdir -p /var/run/mysqld
+	sudo chown mysql:mysql /var/run/mysqld
+	sudo /usr/sbin/mysqld --skip-grant-tables --skip-networking &
+	jobs
+	mysql -u root
+	FLUSH PRIVILEGES;
+	USE mysql; 
+	UPDATE user SET authentication_string=PASSWORD("linuxconfig.org") WHERE User='root';
+	UPDATE user SET plugin="mysql_native_password" WHERE User='root';
+	sudo service mysql start
+4 cài đặt php
+	sudo apt install php-fpm php-mysql
+	sudo nano /etc/nginx/sites-available/example.com
+
+
+		server {
+        		listen 80;
+        		root /var/www/html;
+        		index index.php index.html index.htm index.nginx-debian.html;
+        		server_name example.com;
+
+        		location / {
+                		try_files $uri $uri/ =404;
+        		}
+		
+        		location ~ \.php$ {
+                		include snippets/fastcgi-php.conf;
+                		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+        		}
+
+        		location ~ /\.ht {
+                		deny all;
+        		}
+		}
+
+
+		listen- Xác định cổng nào mà Nginx sẽ lắng nghe. Trong trường hợp này, nó sẽ lắng nghe trên cổng 80, cổng mặc định cho HTTP.
+		root - Xác định gốc tài liệu nơi lưu trữ các tệp do trang web cung cấp.
+		index- Định cấu hình Nginx để ưu tiên các tệp phục vụ được đặt tên index.phpkhi tệp chỉ mục được yêu cầu, nếu chúng có sẵn.
+		server_name- Xác định khối máy chủ nào sẽ được sử dụng cho một yêu cầu nhất định đến máy chủ của bạn. Trỏ chỉ thị này đến tên miền hoặc địa chỉ IP công cộng của máy chủ của bạn.
+		location /- Khối vị trí đầu tiên bao gồm một try_fileschỉ thị, kiểm tra sự tồn tại của các tệp phù hợp với yêu cầu URI. Nếu Nginx không thể tìm thấy tệp thích hợp, nó sẽ trả về lỗi 404.
+		location ~ \.php$- Khối vị trí này xử lý quá trình xử lý PHP thực tế bằng cách trỏ Nginx đến fastcgi-php.conftệp cấu hình và php7.2-fpm.socktệp khai báo socket được liên kết với php-fpm.
+		location ~ /\.ht- Khối vị trí cuối cùng xử lý .htaccesscác tệp mà Nginx không xử lý. Bằng cách thêm deny allchỉ thị, nếu bất kỳ .htaccesstệp nào tình cờ tìm thấy đường vào gốc tài liệu, chúng sẽ không được cung cấp cho khách truy cập.
+
+
+	sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+	sudo unlink /etc/nginx/sites-enabled/default
+	sudo nginx -t
+	sudo systemctl reload nginx
+
+	// test 
+	sudo nano /var/www/html/info.php => <?php phpinfo(); => http://your_server_domain_or_IP/info.php
+
+
+5 cài composer
+	sudo apt update
+	sudo apt install curl php-cli php-mbstring git unzip // cài đặt các thứ cần thiết như: curl, phpcli, git, unzip, ...
+	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+	php -r "if (hash_file('sha384', 'composer-setup.php') === 756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+	php composer-setup.php --version=1.10.13 // tùy chọn version
+	php -r "unlink('composer-setup.php');"
+
+	// nếu muốn xóa
+	which composer => sudo rm đường dẫn vừa hiện
+	// sau khi cài đặt thì phải: sudo mv composer.phar tới thư mục kia
+6 Cài thêm phục vụ cho laravel
+	sudo apt install php-mbstring php-xml php-bcmath
+	sudo apt-get install php5-curl
+	sudo apt-get install php7.2-curl
+	sudo apt-get install php-curl
+	sudo apt-get install php-mbstring
+	sudo apt-get update
+
+*** Bắt đầu cài đặt 1 project Laravel ***
+1 Tạo DB
+	mysql -u root -p
+	create database Ten_Database_Muon_Tao; // tạo DB
+	show databases; // xem danh sách DB
+2 clone như bình thường
+	ls // xem các thư mục cùng cấp
+3 cài đặt
+	composer install
+	cp .env.example .env
+	php artisan key:generate
+	nano .env //để sửa file
+	
+	// để chạy được thì luôn phải đưa project vào /var/www/html
+	sudo mv ~/thu_muc_project /var/www/thu_muc_project // di chuyển thu_muc_project vào /var/www
+
+	// cấp quyền truy cập vào các file trong project
+	sudo chown -R www-data.www-data /var/www/thu_muc_project /storage
+	sudo chown -R www-data.www-data /var/www/thu_muc_project /bootstrap/cache
+	
+	// tạo file cấu hình máy chủ cho nginx
+	server {
+    		listen 80;
+    		server_name server_domain_or_IP; // dòng này ko cần cũng được
+    		root /var/www/thu_muc_project/public;
+
+    		add_header X-Frame-Options "SAMEORIGIN";
+    		add_header X-XSS-Protection "1; mode=block";
+    		add_header X-Content-Type-Options "nosniff";
+
+    		index index.html index.htm index.php;
+
+    		charset utf-8;
+
+    		location / {
+        		try_files $uri $uri/ /index.php?$query_string;
+    		}
+
+    		location = /favicon.ico { access_log off; log_not_found off; }
+    		location = /robots.txt  { access_log off; log_not_found off; }
+
+    		error_page 404 /index.php;
+
+    		location ~ \.php$ {
+        		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+        		fastcgi_index index.php;
+        		fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        		include fastcgi_params;
+    		}
+
+    		location ~ /\.(?!well-known).* {
+        		deny all;
+    		}
+	}
+
+	// sau đó cần kích hoạt file này
+	sudo ln -s /etc/nginx/sites-available/thu_muc_project /etc/nginx/sites-enabled/
+	=> test => sudo nginx -t
+
+
+	// từ lần sau vào cd /var/www/thu_muc_project thao tác git như bình thường
+
+
+	
