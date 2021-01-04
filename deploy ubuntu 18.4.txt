@@ -116,7 +116,7 @@ server {
 	composer install
 	cp .env.example .env
 	php artisan key:generate
-	nano .env //để sửa file
+	nano .env //để sửa file (APP_ENV=development, url, db)
 	
 	// để chạy được thì luôn phải đưa project vào /var/www/html
 	sudo mv ~/thu_muc_project /var/www/thu_muc_project // di chuyển thu_muc_project vào /var/www
@@ -162,7 +162,7 @@ server {
 
 	// sau đó cần kích hoạt file này
 	sudo ln -s /etc/nginx/sites-available/thu_muc_project /etc/nginx/sites-enabled/
-	=> test => sudo nginx -t
+	=> test => sudo nginx -t => sudo systemctl reload nginx
 
 
 	// từ lần sau vào cd /var/www/thu_muc_project thao tác git như bình thường
