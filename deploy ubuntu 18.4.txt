@@ -18,10 +18,13 @@
 	sudo mysql sang chế độ mysql để cài đặt thêm
 	SELECT user,authentication_string,plugin,host FROM mysql.user; xem các tài khoản của mysql
 	ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password'; chuyển phương thức xác thực đăng nhập bằng socket sang mật khẩu
+	USE mysql; 
+	UPDATE user SET authentication_string=PASSWORD("hung1998") WHERE User='root';
+	UPDATE user SET plugin="mysql_native_password" WHERE User='root';	
 	FLUSH PRIVILEGES; cập nhật lại mysql sau config
 
 
-	// nếu bị sai pass khi đăng nhập mysql => đặt lại pass
+	// nếu bị sai pass khi đăng nhập mysql => Đặt lại pass
 	sudo service mysql stop
 	sudo mkdir -p /var/run/mysqld
 	sudo chown mysql:mysql /var/run/mysqld
@@ -30,33 +33,34 @@
 	mysql -u root
 	FLUSH PRIVILEGES;
 	USE mysql; 
-	UPDATE user SET authentication_string=PASSWORD("linuxconfig.org") WHERE User='root';
+	UPDATE user SET authentication_string=PASSWORD("hung1998") WHERE User='root';
 	UPDATE user SET plugin="mysql_native_password" WHERE User='root';
+
 	sudo service mysql start
 4 cài đặt php
 	sudo apt install php-fpm php-mysql
 	sudo nano /etc/nginx/sites-available/example.com
 
 
-		server {
-        		listen 80;
-        		root /var/www/html;
-        		index index.php index.html index.htm index.nginx-debian.html;
-        		server_name example.com;
+server {
+	listen 80;
+	root /var/www/html;
+	index index.php index.html index.htm index.nginx-debian.html;
+	server_name example.com;
 
-        		location / {
-                		try_files $uri $uri/ =404;
-        		}
+	location / {
+		try_files $uri $uri/ =404;
+	}
 		
-        		location ~ \.php$ {
-                		include snippets/fastcgi-php.conf;
-                		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
-        		}
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+	}
 
-        		location ~ /\.ht {
-                		deny all;
-        		}
-		}
+	location ~ /\.ht {
+		deny all;
+	}
+}
 
 
 		listen- Xác định cổng nào mà Nginx sẽ lắng nghe. Trong trường hợp này, nó sẽ lắng nghe trên cổng 80, cổng mặc định cho HTTP.
@@ -79,9 +83,14 @@
 
 5 cài composer
 	sudo apt update
+
+	cách 1:
+	sudo apt install composer // lenh nay thi ko the chon được version
+
+	cách 2:
 	sudo apt install curl php-cli php-mbstring git unzip // cài đặt các thứ cần thiết như: curl, phpcli, git, unzip, ...
 	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-	php -r "if (hash_file('sha384', 'composer-setup.php') === 756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+	php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 	php composer-setup.php --version=1.10.13 // tùy chọn version
 	php -r "unlink('composer-setup.php');"
 
@@ -117,39 +126,39 @@
 	sudo chown -R www-data.www-data /var/www/thu_muc_project /bootstrap/cache
 	
 	// tạo file cấu hình máy chủ cho nginx
-	server {
-    		listen 80;
-    		server_name server_domain_or_IP; // dòng này ko cần cũng được
-    		root /var/www/thu_muc_project/public;
+	sudo nano /etc/nginx/sites-available/thu_muc_project
+server {
+	listen 80;
+	server_name server_domain_or_IP; // dòng này ko cần cũng được
+	root /var/www/thu_muc_project/public;
 
-    		add_header X-Frame-Options "SAMEORIGIN";
-    		add_header X-XSS-Protection "1; mode=block";
-    		add_header X-Content-Type-Options "nosniff";
+	add_header X-Frame-Options "SAMEORIGIN";
+	add_header X-XSS-Protection "1; mode=block";
+	add_header X-Content-Type-Options "nosniff";
 
-    		index index.html index.htm index.php;
+	index index.html index.htm index.php;
 
-    		charset utf-8;
-
-    		location / {
-        		try_files $uri $uri/ /index.php?$query_string;
-    		}
-
-    		location = /favicon.ico { access_log off; log_not_found off; }
-    		location = /robots.txt  { access_log off; log_not_found off; }
-
-    		error_page 404 /index.php;
-
-    		location ~ \.php$ {
-        		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
-        		fastcgi_index index.php;
-        		fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        		include fastcgi_params;
-    		}
-
-    		location ~ /\.(?!well-known).* {
-        		deny all;
-    		}
+	charset utf-8;
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
 	}
+
+	location = /favicon.ico { access_log off; log_not_found off; }
+	location = /robots.txt  { access_log off; log_not_found off; }
+
+	error_page 404 /index.php;
+
+	location ~ \.php$ {
+		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+		fastcgi_index index.php;
+		fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+		include fastcgi_params;
+	}
+
+	location ~ /\.(?!well-known).* {
+		deny all;
+	}
+}
 
 	// sau đó cần kích hoạt file này
 	sudo ln -s /etc/nginx/sites-available/thu_muc_project /etc/nginx/sites-enabled/
