@@ -124,9 +124,9 @@ server {
 	=> test => sudo nginx -t => sudo systemctl reload nginx
 
 *** nếu file not found thì khả năng cao là sai tên thư mục
-
+*** nếu nginx vẫn chạy bình thường thì xem lại file cấu hình xem địa chỉ ip,... đã đúng chưa
 
 	// từ lần sau vào cd /var/www/thu_muc_project thao tác git như bình thường
-
+	
 
 	
